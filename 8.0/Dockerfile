@@ -41,6 +41,7 @@ RUN apt-get update \
 COPY ext-xdebug.ini /usr/local/etc/php/conf.d/
 COPY php/local.ini /usr/local/etc/php/php.ini
 COPY start.sh /start.sh
+COPY www.conf /usr/local/etc/php-fpm.d/www.conf
 
 EXPOSE 9000
 
