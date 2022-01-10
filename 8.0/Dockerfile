@@ -4,6 +4,10 @@ WORKDIR /var/www
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV TZ=UTC
+ARG WWWUSER=1000
+ENV WWWUSER ${WWWUSER}
+ARG WWWGROUP=1000
+ENV WWWGROUP ${WWWGROUP}
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -27,10 +31,17 @@ RUN apt-get update \
     && apt-get -y autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
-    && composer global require zircote/swagger-php
+    && pecl channel-update https://pecl.php.net/channel.xml \
+    && pecl install xdebug swoole \
+    && docker-php-ext-enable xdebug swoole \
+    && addgroup -gid ${WWWGROUP} application \
+    && adduser --system --uid ${WWWUSER} --home "/home/application" --shell /bin/bash -gid ${WWWGROUP} application \
+    && chown application:application /var/www
 
-ENV PATH "$PATH:~/.composer/vendor/bin"
+COPY ext-xdebug.ini /usr/local/etc/php/conf.d/
+COPY php/local.ini /usr/local/etc/php/php.ini
+COPY start.sh /start.sh
 
-RUN pecl channel-update https://pecl.php.net/channel.xml \
-    && pecl install swoole xdebug \
-    && docker-php-ext-enable swoole xdebug
+EXPOSE 9000
+
+CMD ["bash", "/start.sh"]
